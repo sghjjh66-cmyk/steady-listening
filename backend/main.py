@@ -3,7 +3,7 @@ Steady Listening 백엔드 진입점.
 """
 import os
 
-from fastapi import FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ from audio import cache_audio
 from transcribe import transcribe_from_bytes, transcribe_from_url
 from expressions_ai import extract_expressions
 from save import save_episode, save_expressions, get_repeat_counts, get_all_expressions_for_review
-from pipeline import get_episode_status
+from pipeline import get_episode_status, process_new_episode_safely
 from current_episode import get_current_episode_with_expressions
 from session import complete_session, get_all_sessions
 
@@ -126,9 +126,16 @@ def repeat_counts():
 
 
 @app.get("/episodes/status")
-def episode_status():
-    """프론트엔드 홈 화면이 앱 실행 시 호출하는 상태 확인 엔드포인트 (ready/error/not_ready)."""
-    return get_episode_status()
+def episode_status(background_tasks: BackgroundTasks):
+    """프론트엔드 홈 화면이 앱 실행 시 호출하는 상태 확인 엔드포인트 (ready/error/not_ready).
+
+    저장된 최신 에피소드를 즉시 반환하고, 새 에피소드 확인(RSS 조회 포함, 느릴 수 있음)은
+    응답을 보낸 뒤 백그라운드에서 처리한다 (2026-07-24: 매 요청마다 RSS를 기다리게 하면
+    Render 무료 인스턴스에서 응답이 너무 느려지거나 멈춘 것처럼 보이는 문제 대응).
+    """
+    result = get_episode_status()
+    background_tasks.add_task(process_new_episode_safely)
+    return result
 
 
 @app.get("/episodes/current")
