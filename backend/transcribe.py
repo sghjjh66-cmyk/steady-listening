@@ -24,8 +24,9 @@ def _get_model() -> WhisperModel:
 def transcribe_from_bytes(audio_bytes: bytes) -> str:
     """이미 메모리에 있는 오디오 바이트를 바로 전사한다 (재다운로드 없이).
 
-    beam_size=1(그리디 디코딩)과 vad_filter=True(무음 구간 스킵)로 메모리·연산량을 줄인다
-    — Render 무료 플랜에서 전사 중 메모리 부족으로 프로세스가 죽는 문제 대응 (2026-07-24).
+    vad_filter=True(무음 구간 스킵)로 연산량을 조금 줄인다. beam_size=1(그리디 디코딩)도
+    같이 써봤으나 전사 품질이 떨어져 핵심 표현 추출 개수가 급격히 줄어드는 문제가 있어서
+    되돌렸다 (2026-07-24) — 학습 콘텐츠 품질이 메모리 절약보다 우선이라고 판단.
     """
     # Windows에서는 파일이 열려 있는 채로 다른 프로세스(av)가 접근하면 PermissionError가 나서,
     # 파일을 닫은 뒤 경로만 넘기고 끝나면 직접 지운다.
@@ -35,7 +36,7 @@ def transcribe_from_bytes(audio_bytes: bytes) -> str:
             tmp_file.write(audio_bytes)
 
         model = _get_model()
-        segments, _info = model.transcribe(tmp_path, beam_size=1, vad_filter=True)
+        segments, _info = model.transcribe(tmp_path, vad_filter=True)
         return " ".join(segment.text.strip() for segment in segments)
     finally:
         os.remove(tmp_path)
