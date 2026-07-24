@@ -77,6 +77,13 @@ bkit:gap-detector로 검증함.
 - 학습 화면 표현 카드 목록 위에 진행 표시("1 / 9") 추가 — 기존 `activeIndex` 계산값 재사용, 높음 모드에서 카드 몇 개 남았는지 감이 안 오던 문제 해결.
 - 홈 화면 로딩 중 안내 문구 추가를 시도했다가 (2026-07-24) "불러오는 중..."과 나란히 두니 추가 정보 가치가 없다는 피드백에 따라 원래대로 되돌림. 진짜 단계별 진행률은 백엔드가 파이프라인을 한 번의 동기 호출로 처리하는 구조라 손이 많이 가서(폴링 구조 필요), 지금은 보류.
 
+## 5. 배포 진행 상황 (2026-07-24)
+
+- GitHub: [sghjjh66-cmyk/steady-listening](https://github.com/sghjjh66-cmyk/steady-listening) (비공개) — 초기 구현 전체 푸시 완료.
+- Vercel(프론트): https://steady-listening.vercel.app 배포 완료. 배포 중 `disablePictureInPicture`가 `<audio>` 타입에 없어 빌드 실패했던 것 발견·수정 (로컬 `npm run dev`에서는 안 걸리고 프로덕션 빌드에서만 걸리는 오류였음).
+- Render(백엔드): **아직 미배포**. `render.yaml` 블루프린트를 저장소 루트에 준비해뒀고, Render 대시보드에서 GitHub 연결 및 실제 비밀 값 입력은 사용자가 직접 해야 함 (계정 연동·API 키 입력은 에이전트가 대신 할 수 없는 항목).
+- 백엔드가 뜨기 전까지 Vercel 프론트는 "에피소드를 불러오는 중 문제가 생겼습니다" 에러 배너만 보임 — 정상 (백엔드 부재로 인한 예상된 상태).
+
 ## 다음 우선순위 (권장 순서)
 
 1. **(필수, 배포 전)** OpenAI 키·Supabase service_role 키 재발급 → Render 환경변수 등록
