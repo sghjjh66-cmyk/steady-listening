@@ -77,12 +77,19 @@ bkit:gap-detector로 검증함.
 - 학습 화면 표현 카드 목록 위에 진행 표시("1 / 9") 추가 — 기존 `activeIndex` 계산값 재사용, 높음 모드에서 카드 몇 개 남았는지 감이 안 오던 문제 해결.
 - 홈 화면 로딩 중 안내 문구 추가를 시도했다가 (2026-07-24) "불러오는 중..."과 나란히 두니 추가 정보 가치가 없다는 피드백에 따라 원래대로 되돌림. 진짜 단계별 진행률은 백엔드가 파이프라인을 한 번의 동기 호출로 처리하는 구조라 손이 많이 가서(폴링 구조 필요), 지금은 보류.
 
-## 5. 배포 진행 상황 (2026-07-24)
+## 5. 배포 진행 상황 (2026-07-24) — 배포 완료
 
-- GitHub: [sghjjh66-cmyk/steady-listening](https://github.com/sghjjh66-cmyk/steady-listening) (비공개) — 초기 구현 전체 푸시 완료.
-- Vercel(프론트): https://steady-listening.vercel.app 배포 완료. 배포 중 `disablePictureInPicture`가 `<audio>` 타입에 없어 빌드 실패했던 것 발견·수정 (로컬 `npm run dev`에서는 안 걸리고 프로덕션 빌드에서만 걸리는 오류였음).
-- Render(백엔드): **아직 미배포**. `render.yaml` 블루프린트를 저장소 루트에 준비해뒀고, Render 대시보드에서 GitHub 연결 및 실제 비밀 값 입력은 사용자가 직접 해야 함 (계정 연동·API 키 입력은 에이전트가 대신 할 수 없는 항목).
-- 백엔드가 뜨기 전까지 Vercel 프론트는 "에피소드를 불러오는 중 문제가 생겼습니다" 에러 배너만 보임 — 정상 (백엔드 부재로 인한 예상된 상태).
+- GitHub: [sghjjh66-cmyk/steady-listening](https://github.com/sghjjh66-cmyk/steady-listening) (비공개) — 전체 푸시 완료.
+- Vercel(프론트): **https://steady-listening.vercel.app** — 배포 완료.
+- Render(백엔드): **https://steady-listening-backend.onrender.com** — 배포 완료 (무료 플랜).
+- 배포 중 실제로 겪은 문제와 조치:
+  1. 프로덕션 빌드에서만 걸리는 TS 에러(`disablePictureInPicture`가 `<audio>` 타입에 없음) → 속성 제거.
+  2. Vercel `NEXT_PUBLIC_API_URL`(URL, 비밀 아님)은 에이전트가 등록, `NEXT_PUBLIC_APP_KEY`(비밀)는 사용자가 직접 등록.
+  3. Render `ALLOWED_ORIGINS`에 로컬 주소가 남아있어 CORS가 막혔던 것 → Vercel 실제 주소로 수정.
+  4. **Render 무료 플랜(512MB) 메모리 부족으로 전사 중 프로세스가 죽는 문제**: faster-whisper 오디오를 캐싱용/전사용으로 두 번 중복 다운로드하던 것을 한 번으로 줄이고, 모델을 `tiny`→`tiny.en`(영어 전용)으로 변경, `vad_filter=True`(무음 스킵) 추가. `beam_size=1`(그리디 디코딩)도 같이 시도했으나 표현 추출 개수가 9개→1개로 급감할 만큼 품질이 떨어져서 되돌림 — 메모리 절약보다 학습 콘텐츠 품질을 우선함.
+  5. **RSS 피드 요청에 타임아웃이 없어 응답이 무한정 멈추는 문제**: `feedparser.parse(url)`이 내부적으로 타임아웃 없이 요청해서, 피드 서버가 느려지면 API 전체가 멈춰버림 → `requests.get(..., timeout=20)`으로 먼저 받은 뒤 파싱하도록 변경.
+  6. **구조적 개선**: `/episodes/status`가 RSS 확인이 끝날 때까지 사용자를 기다리게 하던 것을, DB에 저장된 최신 에피소드를 즉시 반환하고 새 에피소드 확인은 응답 후 백그라운드로 분리 (Render 무료 인스턴스의 콜드스타트+RSS 지연이 겹쳐 응답이 멈춘 것처럼 보이던 문제 해결).
+- 실제 배포 사이트에서 홈/학습(진행표시 포함)/표현카드 전부 정상 동작 확인함.
 
 ## 다음 우선순위 (권장 순서)
 
