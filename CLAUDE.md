@@ -4,27 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 현황
 
-이 저장소는 아직 코드가 없는 기획 단계다. `PRD.md`(상세 기획서)와 `prd_lite.md`(요약본)만 존재하며,
-프론트엔드/백엔드 저장소, `package.json`, 빌드/테스트 설정 등은 아직 만들어지지 않았다.
-코드가 추가되면 이 섹션과 아래 "빌드·테스트 명령" 섹션을 실제 명령어로 채워야 한다.
+PLAN.md 전체 구현 완료 후 배포까지 끝난 상태다 (2026-07-24). `frontend/`(Next.js), `backend/`(FastAPI)
+저장소가 모두 존재하고, GitHub 비공개 저장소([sghjjh66-cmyk/steady-listening](https://github.com/sghjjh66-cmyk/steady-listening))에
+푸시돼 있으며 Vercel·Render에 배포돼 있다 (아래 "기술 스택" 절의 배포 주소 참고).
 
 두 PRD 문서 사이에 일부 내용이 다르다 (전사 방식, 표현 추출 API). `PRD.md`가 더 나중에 작성된 상세본이고
 기술적 제약(FT.com 스크립트는 구독 로그인 필요)에 대한 이유가 명시되어 있으므로, 충돌 시 `PRD.md`를 우선한다.
+`prd_lite.md`는 기획 초기 요약본이라 오래된 내용(Anthropic API 등)이 남아있을 수 있어 참고용으로만 본다.
+
+설계 대비 Gap 점검·보안 점검·배포 트러블슈팅 이력은 `CHECK.md`에 정리돼 있다.
 
 ## 무엇을 만드는가
 
 Steady Listening — FT News Briefing 팟캐스트로 매일 영어 리스닝 습관을 만드는 1인용 개인 앱.
 회원가입/인증 없음, 배포 URL 비공개로 접근 제한. 자세한 배경·성공 기준은 `PRD.md` 1~3절 참고.
 
-## 예정된 기술 스택
+## 기술 스택
 
 - 프론트엔드: Next.js (React), 모바일 우선 (320~430px), 세이지 그린/톤다운 블루 톤
 - 백엔드: FastAPI (Python)
-- 오디오 전사: faster-whisper **tiny** 모델 (FT.com 공식 스크립트는 로그인 필요해 자동 수집 불가 → 직접 전사로 대체)
+- 오디오 전사: faster-whisper **tiny.en** 모델, `vad_filter=True` (FT.com 공식 스크립트는 로그인 필요해 자동 수집 불가 → 직접 전사로 대체. `beam_size=1`은 표현 추출 품질을 크게 떨어뜨려 시도 후 되돌림)
 - 표현/예문 생성: OpenAI API (gpt-4o-mini), 응답은 고정 JSON 스키마로 파싱
 - 데이터 저장: Supabase (PostgreSQL) — 로컬 SQLite 사용 금지
 - 오디오 캐시: Supabase Storage (백엔드 재배포/재시작에도 유지, 자동 삭제 없음)
-- 배포: Vercel(프론트) / Render 무료 플랜(백엔드) — Render 콜드 스타트로 인한 첫 로딩 지연은 감수
+- 배포: Vercel(프론트, https://steady-listening.vercel.app) / Render 무료 플랜(백엔드, https://steady-listening-backend.onrender.com) — Render 콜드 스타트로 인한 첫 로딩 지연은 감수. 백엔드는 `render.yaml` 블루프린트로 구성됨
 
 ## 핵심 아키텍처 규칙 (여러 파일에 걸쳐 지켜야 하는 것들)
 
@@ -45,7 +48,12 @@ Steady Listening — FT News Briefing 팟캐스트로 매일 영어 리스닝 �
 
 ## 빌드·테스트 명령
 
-아직 없음. 프론트엔드/백엔드 저장소가 생성되면 실제 명령(`npm run dev`, `pytest` 등)으로 이 섹션을 채울 것.
+별도 자동화 테스트(pytest 등)는 없음 — 이 프로젝트는 "작업 절차(검증 루프)"에 따라 실제 브라우저/API 호출로 검증한다.
+
+- 프론트엔드 개발 서버: `cd frontend && npm run dev` (http://localhost:3000)
+- 프론트엔드 프로덕션 빌드 확인: `cd frontend && npm run build` (배포 전 반드시 로컬에서 먼저 통과시킬 것 — `next dev`에서는 안 걸리고 빌드에서만 걸리는 TS 에러가 실제로 있었음)
+- 백엔드 개발 서버: `cd backend && ./venv/Scripts/python -m uvicorn main:app --port 8000` (http://127.0.0.1:8000, `/health` 확인)
+- 백엔드 의존성 설치: `cd backend && ./venv/Scripts/pip install -r requirements.txt`
 
 ## 작업 규칙
 
