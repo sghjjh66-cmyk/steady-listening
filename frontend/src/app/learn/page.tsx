@@ -159,7 +159,6 @@ function LearnContent() {
             ref={audioRef}
             controls
             controlsList="nodownload"
-            disablePictureInPicture
             src={episode.audio_storage_path}
             className="mt-6 w-full max-w-sm"
           />
