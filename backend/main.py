@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from rss import get_latest_episode
 from episodes import check_new_episode
 from audio import cache_audio
-from transcribe import transcribe_from_url
+from transcribe import transcribe_from_bytes, transcribe_from_url
 from expressions_ai import extract_expressions
 from save import save_episode, save_expressions, get_repeat_counts, get_all_expressions_for_review
 from pipeline import get_episode_status
@@ -78,16 +78,16 @@ def check_episode():
 def cache_latest_audio():
     """RSS 최신 에피소드의 오디오를 다운로드해서 Storage에 캐싱하고 공개 URL을 돌려준다."""
     latest = get_latest_episode()
-    public_url = cache_audio(latest["guid"], latest["audio_url"])
+    public_url, _ = cache_audio(latest["guid"], latest["audio_url"])
     return {"guid": latest["guid"], "cached_audio_url": public_url}
 
 
 @app.get("/episodes/transcribe")
 def transcribe_latest():
-    """RSS 최신 에피소드의 오디오를 faster-whisper(tiny)로 전사한다."""
+    """RSS 최신 에피소드의 오디오를 faster-whisper(tiny.en)로 전사한다."""
     latest = get_latest_episode()
-    cached_url = cache_audio(latest["guid"], latest["audio_url"])  # Storage 캐시본을 재사용 (원본 CDN 재요청 방지)
-    transcript = transcribe_from_url(cached_url)
+    cached_url, audio_bytes = cache_audio(latest["guid"], latest["audio_url"])
+    transcript = transcribe_from_bytes(audio_bytes) if audio_bytes is not None else transcribe_from_url(cached_url)
     return {"guid": latest["guid"], "transcript": transcript}
 
 
@@ -95,8 +95,8 @@ def transcribe_latest():
 def extract_latest_expressions():
     """RSS 최신 에피소드를 전사하고, 핵심 표현과 예문을 추출한다."""
     latest = get_latest_episode()
-    cached_url = cache_audio(latest["guid"], latest["audio_url"])
-    transcript = transcribe_from_url(cached_url)
+    cached_url, audio_bytes = cache_audio(latest["guid"], latest["audio_url"])
+    transcript = transcribe_from_bytes(audio_bytes) if audio_bytes is not None else transcribe_from_url(cached_url)
     expressions = extract_expressions(transcript)
     return {"guid": latest["guid"], "expressions": expressions}
 
@@ -109,8 +109,8 @@ def process_latest_episode():
         return {"processed": False, "episode": check["episode"]}
 
     rss = check["rss"]
-    cached_url = cache_audio(rss["guid"], rss["audio_url"])
-    transcript = transcribe_from_url(cached_url)
+    cached_url, audio_bytes = cache_audio(rss["guid"], rss["audio_url"])
+    transcript = transcribe_from_bytes(audio_bytes) if audio_bytes is not None else transcribe_from_url(cached_url)
     expressions = extract_expressions(transcript)
 
     episode_id = save_episode(rss["guid"], rss["title"], cached_url, transcript)

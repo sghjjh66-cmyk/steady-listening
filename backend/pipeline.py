@@ -14,7 +14,7 @@ from db import get_client
 from episodes import check_new_episode
 from expressions_ai import extract_expressions
 from save import save_episode, save_expressions
-from transcribe import transcribe_from_url
+from transcribe import transcribe_from_bytes, transcribe_from_url
 
 
 def _get_most_recent_episode():
@@ -45,13 +45,16 @@ def get_episode_status() -> dict:
     fallback_episode = check.get("current_displayed_episode")
 
     try:
-        cached_url = cache_audio(rss["guid"], rss["audio_url"])
+        cached_url, audio_bytes = cache_audio(rss["guid"], rss["audio_url"])
     except Exception:
         # 오디오가 아직 안 올라온 경우: 실패가 아니라 "준비 안됨" (재시도 버튼 없음, 다음 실행 때 재확인)
         return {"status": "not_ready", "episode": fallback_episode}
 
     try:
-        transcript = transcribe_from_url(cached_url)
+        # 방금 다운로드한 바이트가 있으면 재사용하고, 없으면(이미 캐싱돼 있던 경우) URL에서 받는다.
+        transcript = (
+            transcribe_from_bytes(audio_bytes) if audio_bytes is not None else transcribe_from_url(cached_url)
+        )
         expressions = extract_expressions(transcript)
     except Exception:
         return {"status": "error", "reason": "transcribe_or_extract", "episode": fallback_episode}
