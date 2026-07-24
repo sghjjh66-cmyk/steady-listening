@@ -1,0 +1,24 @@
+# 환경변수(비밀정보) — 절대 커밋하지 않는다
+.env
+.env.local
+**/.env
+!**/.env.example
+
+# 프론트엔드 (Next.js)
+frontend/node_modules/
+frontend/.next/
+
+# 백엔드 (FastAPI/Python)
+backend/__pycache__/
+backend/venv/
+backend/.venv/
+
+# 실습 중 지운 파일을 임시 보관하는 폴더
+trash-can/
+
+# Claude Code / bkit 로컬 도구 상태 (프로젝트 소스 아님)
+.bkit/
+.claude/
+
+# OS
+.DS_Store
