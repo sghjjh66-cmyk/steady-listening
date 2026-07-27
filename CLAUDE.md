@@ -23,7 +23,7 @@ Steady Listening — FT News Briefing 팟캐스트로 매일 영어 리스닝 �
 
 - 프론트엔드: Next.js (React), 모바일 우선 (320~430px), 세이지 그린/톤다운 블루 톤
 - 백엔드: FastAPI (Python)
-- 오디오 전사: faster-whisper **tiny.en** 모델, `vad_filter=True` (FT.com 공식 스크립트는 로그인 필요해 자동 수집 불가 → 직접 전사로 대체. `beam_size=1`은 표현 추출 품질을 크게 떨어뜨려 시도 후 되돌림)
+- 오디오 전사: OpenAI Whisper API (`whisper-1`) — FT.com 공식 스크립트는 로그인 필요해 자동 수집 불가 → 직접 전사로 대체. 원래 faster-whisper로 Render 서버 안에서 직접 전사했으나 무료 플랜(512MB) 메모리로는 전사 중 프로세스가 종종 죽는 문제가 반복돼서(2026-07-24~28), 전사를 API 호출로 바꿔 Render의 메모리 부담을 없앴다 (2026-07-28)
 - 표현/예문 생성: OpenAI API (gpt-4o-mini), 응답은 고정 JSON 스키마로 파싱
 - 데이터 저장: Supabase (PostgreSQL) — 로컬 SQLite 사용 금지
 - 오디오 캐시: Supabase Storage (백엔드 재배포/재시작에도 유지, 자동 삭제 없음)

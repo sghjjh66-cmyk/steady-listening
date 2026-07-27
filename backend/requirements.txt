@@ -4,6 +4,5 @@ python-dotenv==1.0.1
 feedparser==6.0.12
 supabase==2.31.0
 requests==2.34.2
-faster-whisper==1.2.1
 openai==2.47.0
 tzdata==2026.3

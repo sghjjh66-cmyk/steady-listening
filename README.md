@@ -16,7 +16,7 @@ FT News Briefing 팟캐스트로 매일 영어 리스닝 습관을 만드는 1�
 
 - 프론트엔드: Next.js (App Router, React, Tailwind)
 - 백엔드: FastAPI (Python)
-- 오디오 전사: faster-whisper `tiny.en` 모델 (영어 전용, `vad_filter=True`)
+- 오디오 전사: OpenAI Whisper API (`whisper-1`)
 - 표현/예문 생성: OpenAI API (gpt-4o-mini)
 - 데이터 저장: Supabase (PostgreSQL + Storage)
 
