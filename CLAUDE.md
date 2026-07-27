@@ -17,7 +17,10 @@ PLAN.md 전체 구현 완료 후 배포까지 끝난 상태다 (2026-07-24). `fr
 ## 무엇을 만드는가
 
 Steady Listening — FT News Briefing 팟캐스트로 매일 영어 리스닝 습관을 만드는 1인용 개인 앱.
-회원가입/인증 없음, 배포 URL 비공개로 접근 제한. 자세한 배경·성공 기준은 `PRD.md` 1~3절 참고.
+회원가입/계정 시스템 없음. 프론트엔드는 Vercel 환경변수 `BASIC_AUTH_USER`/`BASIC_AUTH_PASSWORD`로
+브라우저 기본 로그인창(Basic Auth, `frontend/src/middleware.ts`)을 걸어 본인만 접근 가능하고,
+백엔드는 모든 요청에 공유 비밀 헤더(`APP_SHARED_SECRET`/`X-App-Key`)를 요구해 URL을 알아도 API를 못 두드린다.
+자세한 배경·성공 기준은 `PRD.md` 1~3절 참고.
 
 ## 기술 스택
 
